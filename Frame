@@ -1,0 +1,236 @@
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+public class MineFrame {
+
+    JFrame frame;
+    private Grid grid;
+    private JButton[][] buttonGrid;
+    private int rows;
+    private int cols;
+    private int numClicks;
+    private int numBombs;
+
+    // Default constructor
+    public MineFrame() {
+        grid = new Grid();
+        this.rows = grid.getNumRows();
+        this.cols = grid.getNumColumns();
+        this.numBombs = grid.getNumBombs();
+        this.numClicks = 0;
+        buttonGrid = new JButton[rows][cols];
+
+        createGame();
+    }
+
+    public MineFrame(int rows, int columns) {
+        grid = new Grid(rows, columns);
+        this.rows = grid.getNumRows();
+        this.cols = grid.getNumColumns();
+        this.numBombs = grid.getNumBombs();
+        this.numClicks = 0;
+        buttonGrid = new JButton[rows][cols];
+
+        createGame();
+    }
+
+    public MineFrame(int rows, int columns, int numBombs) {
+        grid = new Grid(rows, columns, numBombs);
+        this.rows = grid.getNumRows();
+        this.cols = grid.getNumColumns();
+        this.numBombs = grid.getNumBombs();
+        this.numClicks = 0;
+        buttonGrid = new JButton[rows][cols];
+
+        createGame();
+    }
+
+    private void createGame() {
+        frame = new JFrame("Monkeysweepers");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 600);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(rows, cols)); //using grid layout to automatically get a layout for the buttons
+
+        for (int iRow = 0; iRow < rows; iRow++) {
+            for (int jCol = 0; jCol < cols; jCol++) {
+
+                JButton btn = new JButton();  // create buttons
+                btn.setFont(new Font("Arial", Font.PLAIN, 25));
+
+                final int row = iRow;
+                final int col = jCol;
+
+                btn.addActionListener(e -> handleClick(row, col)); // add an action listener to every button that uses handleClick to handle events
+
+                buttonGrid[iRow][jCol] = btn; // and add buttons with action listeners
+                panel.add(btn);
+            }
+        }
+
+        frame.add(panel);
+        frame.setVisible(true);
+    }
+
+    private void handleClick(int row, int col) {
+        if (grid.isBombAtLocation(row, col)) {
+        	try {
+        	Image img = ImageIO.read(getClass().getResource("bomb.png"));
+        	int width = buttonGrid[row][col].getWidth();
+    	    int height = buttonGrid[row][col].getHeight();
+
+    	    Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+
+    	    buttonGrid[row][col].setIcon(new ImageIcon(scaledImg));
+        	
+
+        	}
+        	catch (Exception ex) {
+        	    System.out.println(ex);
+        	  }
+            buttonGrid[row][col].setBackground(Color.RED);
+            buttonGrid[row][col].setEnabled(false);
+            gameOver();
+        } else {
+            int count = grid.getCountAtLocation(row, col);
+            buttonGrid[row][col].setText(Integer.toString(count)); //or: String.valueOf(count)
+            buttonGrid[row][col].setEnabled(false);
+
+            this.numClicks++;
+
+            // Win condition
+            if ((rows * cols - numClicks) == numBombs) {
+                gameWon();
+            }
+        }
+    }
+
+    // -------------------------------
+    //           GAME WON
+    // -------------------------------
+    private void gameWon() {
+        // Reveal remaining bombs
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (grid.isBombAtLocation(i, j)) {
+                    buttonGrid[i][j].setText("B");
+                    buttonGrid[i][j].setBackground(Color.RED);
+                    buttonGrid[i][j].setEnabled(false);
+                }
+            }
+        }
+
+        JOptionPane.showMessageDialog(frame, "Game Won!");
+
+        int choice = JOptionPane.showConfirmDialog(frame, //No returns 1, yes returns 0
+        		"Do you want to play again?",//closing JOptionPane returns -1, lastly cancel returns 2
+        		"Play Again?",
+        		JOptionPane.YES_NO_OPTION);
+           
+        if (choice == JOptionPane.NO_OPTION) {
+            frame.dispose();
+            System.exit(0); // dispose of the frame and shut down the console and JVM
+        } else {
+        	frame.dispose();
+            restartGame();
+        }
+    }
+
+    // -------------------------------
+    //           GAME OVER
+    // -------------------------------
+    private void gameOver() {
+
+        // Reveal entire board
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+
+                if (!grid.isBombAtLocation(i, j)) { // reveal the count of all the locations with no bombs and show all the bombs
+                    int count = grid.getCountAtLocation(i, j);  
+                    buttonGrid[i][j].setText(Integer.toString(count));
+                } else {
+                	
+                    buttonGrid[i][j].setBackground(Color.RED);
+                }
+
+                buttonGrid[i][j].setEnabled(false); // as well as disabling all buttons
+            }
+        }
+
+        JOptionPane.showMessageDialog(frame, "Game Over!"); // show game over
+
+        int choice = JOptionPane.showConfirmDialog(
+                frame,
+                "Do you want to play again?",
+                "Play Again?",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (choice == JOptionPane.NO_OPTION) { //No returns 1, yes returns 0
+            frame.dispose();  //closing JOptionPane returns -1, lastly cancel returns 2
+            System.out.println("Operation canceled. Exiting.");
+            System.exit(0);
+        } else {
+        	 frame.dispose();
+            restartGame();
+        }
+    }
+
+ // -------------------------------
+    //       RESTART GAME
+    // -------------------------------
+    private void restartGame() {
+        int r = getValidInput("Enter number of rows");
+        int c = getValidInput("Enter number of columns");
+        int bomb = getValidInput("Enter number of tsar bombas");
+       
+        new MineFrame(r, c, bomb);
+    }
+
+    // -------------------------------
+    //             MAIN
+    // -------------------------------
+    public static void main(String[] args) {
+        
+        int r = getValidInput("Enter number of rows");
+        int c = getValidInput("Enter number of columns");
+        int bomb = getValidInput("Enter number of tsar bombas");
+      
+        new MineFrame(r, c, bomb);
+    }
+ // Helper method for safe input validation
+    private static int getValidInput(String message) {
+        while (true) {
+            String input = JOptionPane.showInputDialog(null, message);
+
+            // Handle Cancel button or closing the window (input is null)
+            if (input == null) {
+                System.out.println("Operation canceled. Exiting.");
+                System.exit(0); 
+            }
+
+            try {
+                // Try to parse the input, trimming any accidental whitespace
+                int value = Integer.parseInt(input.trim());
+
+                // Ensure the inputs are valid for a Minesweeper grid
+                if (value > 0) {
+                    return value;
+                } else {
+                    JOptionPane.showMessageDialog(null, 
+                        "Please enter a number greater than 0.", 
+                        "Invalid Input", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+
+            } catch (NumberFormatException e) {
+                // Catch strings, empty inputs, or decimals
+                JOptionPane.showMessageDialog(null, 
+                    "Invalid input. Please enter a valid whole number.", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }  
+}
