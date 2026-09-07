@@ -2,7 +2,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 public class MineFrame {
-
+//MineFrame Class
     JFrame frame;
     private Grid grid;
     private JButton[][] buttonGrid;
