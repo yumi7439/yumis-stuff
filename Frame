@@ -46,7 +46,7 @@ public class MineFrame {
     }
 
     private void createGame() {
-        frame = new JFrame("Monkeysweepers");
+        frame = new JFrame("Minesweepers");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 600);
 
